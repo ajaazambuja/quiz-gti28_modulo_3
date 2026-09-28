@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de Decisões – Equipe de Planejamento TI.GOV</title>
+<style>
+:root{--n:#07366f;--o:#f58220;--bg:#f3f6fa;--g:#176b3a;--r:#a12b2b;--muted:#667487;--line:#dbe2eb}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172335;line-height:1.55}
+header{background:linear-gradient(120deg,#052d5d,#084887);color:#fff;padding:30px 18px;border-bottom:7px solid var(--o)}
+.wrap,main{max-width:980px;margin:auto}h1{margin:0 0 5px;font-size:clamp(26px,4vw,38px)}header p{margin:5px 0}
+.badge{display:inline-block;margin-top:8px;background:#ffffff20;padding:5px 10px;border-radius:18px}
+main{padding:22px 15px 45px}.panel,.decision,.result{background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #00000010}
+.panel h2,.decision h2{margin-top:0;color:var(--n)}.role{border-left:6px solid var(--o)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}.flow span{padding:7px 10px;border-radius:7px;background:#edf2f8;color:var(--n);font-weight:bold}.flow b{color:var(--o)}
+.progress{height:9px;background:#e4e9ef;border-radius:8px;overflow:hidden}.progress>div{height:100%;background:var(--o);width:0;transition:.3s}
+.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:14px;margin-bottom:7px}
+.context{background:#f6f8fb;border-left:4px solid #9aa9bb;padding:12px 14px;border-radius:7px;margin:12px 0 16px}
+.option{display:block;border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin:9px 0;cursor:pointer}.option:hover{background:#f8fafc}.option input{margin-right:7px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;cursor:pointer}.primary{background:var(--n);color:#fff}.secondary{background:#e5eaf1;color:#172335}button:disabled{opacity:.5;cursor:not-allowed}
+.feedback{display:none;margin-top:15px;padding:13px;border-radius:9px}.good{display:block;background:#eaf7ef;color:var(--g);border-left:5px solid var(--g)}.wrong{display:block;background:#fff0f0;color:var(--r);border-left:5px solid var(--r)}
+.result{display:none;border-left:6px solid var(--o)}.result.show{display:block}.score{font-size:28px;font-weight:800;color:var(--n)}
+.log{margin-top:15px}.log-item{border-top:1px solid var(--line);padding:11px 0}.log-item:first-child{border-top:0}.oktxt{color:var(--g);font-weight:bold}.badtxt{color:var(--r);font-weight:bold}
+.legend{font-size:14px;color:var(--muted)}footer{text-align:center;color:#687487;padding:18px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Simulador de Decisões Estratégicas</h1>
+<p><b>Você integra a equipe de planejamento da TI.GOV</b></p>
+<span class="badge">15 decisões • feedback imediato • resultado final</span>
+</div></header>
+<main>
+<section class="panel role">
+<h2>Sua função no simulador</h2>
+<p>Você foi designado para integrar a <b>equipe de planejamento da TI.GOV</b>, uma empresa fictícia que desenvolve e mantém soluções digitais para organizações públicas. Ao longo do processo, a equipe encontrará situações que exigem decisões sobre o planejamento estratégico.</p>
+<p>Em cada etapa, analise o contexto, selecione a decisão que considera mais adequada e clique em <b>Tomar decisão</b>. O simulador informará imediatamente se a decisão é adequada ou inadequada e explicará <b>por quê</b>. Depois, avance para a próxima etapa.</p>
+<div class="flow"><span>Missão e Visão</span><b>→</b><span>Objetivos</span><b>→</b><span>Estratégias</span><b>→</b><span>Metas</span><b>→</b><span>Ações</span><b>→</b><span>Indicadores</span></div>
+</section>
+
+<section class="panel">
+<div class="meta"><span id="status">Decisão 1 de 15</span><span id="points">Decisões adequadas: 0</span></div>
+<div class="progress"><div id="pbar"></div></div>
+</section>
+
+<section id="decision" class="decision">
+<div class="meta"><span id="tag"></span><span id="step"></span></div>
+<h2 id="title"></h2>
+<div id="context" class="context"></div>
+<p id="ask"><b></b></p>
+<form id="form"><div id="options"></div>
+<div class="actions">
+<button id="decide" class="primary" type="submit">Tomar decisão</button>
+<button id="next" class="secondary" type="button" disabled>Próxima decisão</button>
+</div></form>
+<div id="feedback" class="feedback" aria-live="polite"></div>
+</section>
+
+<section id="result" class="result">
+<div id="score" class="score"></div>
+<p id="message"></p>
+<h2 style="color:var(--n)">Registro das decisões</h2>
+<p class="legend">Revise as escolhas feitas durante o processo e a justificativa conceitual de cada decisão.</p>
+<div id="log" class="log"></div>
+<div class="actions"><button id="restart" class="primary" type="button">Refazer simulação</button></div>
+</section>
+</main>
+<footer>Planejamento e Gestão Estratégica de TI • Simulação aplicada</footer>
+
+<script>
+const stages=[{"title": "1. Compreender o propósito da TI.GOV", "context": "A TI.GOV desenvolve e mantém soluções digitais para organizações públicas. Antes de definir objetivos e projetos, a equipe precisa estabelecer a razão de existir da organização.", "ask": "Como integrante da equipe de planejamento, qual decisão você recomenda para definir a Missão?", "opts": ["Definir como missão: “Prover soluções e serviços de tecnologia da informação que apoiem organizações públicas na prestação de serviços digitais de qualidade à sociedade.”", "Definir como missão: “Ser reconhecida até 2030 como referência nacional em serviços públicos digitais seguros e eficientes.”", "Definir como missão: “Alcançar 99,5% de disponibilidade dos serviços críticos até dezembro.”", "Definir como missão: “Implantar uma plataforma de monitoramento dos serviços críticos.”"], "a": 0, "why": ["Adequada. A decisão expressa a razão de existir e o propósito atual da TI.GOV, que é a função da Missão.", "Inadequada. A formulação descreve uma condição futura desejada e, portanto, corresponde à Visão.", "Inadequada. A formulação estabelece um resultado mensurável e um prazo, características de uma Meta.", "Inadequada. A formulação descreve algo a ser executado e corresponde a uma Ação."], "tag": "Missão"}, {"title": "2. Definir o futuro desejado", "context": "Com a Missão estabelecida, a equipe precisa indicar a posição que a TI.GOV deseja alcançar no futuro.", "ask": "Qual decisão é mais adequada para estabelecer a Visão?", "opts": ["“Monitorar mensalmente a disponibilidade dos serviços críticos.”", "“Ser reconhecida até 2030 como referência nacional em serviços públicos digitais seguros, eficientes e acessíveis.”", "“Prover soluções de TI que apoiem organizações públicas.”", "“Implantar procedimentos de continuidade de serviços.”"], "a": 1, "why": ["Inadequada. Monitorar é uma atividade de acompanhamento e não descreve o futuro desejado.", "Adequada. A decisão apresenta uma condição futura desejada e orienta para onde a organização pretende avançar.", "Inadequada. A formulação expressa propósito de atuação e se aproxima da Missão.", "Inadequada. Implantar procedimentos é uma Ação, não uma Visão."], "tag": "Visão"}, {"title": "3. Transformar o direcionamento em resultado estratégico", "context": "O diagnóstico mostrou interrupções em serviços digitais críticos. Missão e Visão já foram definidas. A equipe precisa estabelecer o que pretende alcançar.", "ask": "Qual decisão deve ser registrada como Objetivo Estratégico?", "opts": ["Implantar uma ferramenta de monitoramento em 90 dias.", "Percentual mensal de disponibilidade dos serviços.", "Aumentar a qualidade e a disponibilidade dos serviços digitais críticos.", "Alcançar disponibilidade mínima de 99,5% até dezembro."], "a": 2, "why": ["Inadequada. Trata-se de uma Ação concreta de execução.", "Inadequada. Trata-se de uma medida de desempenho e corresponde a um Indicador.", "Adequada. O Objetivo Estratégico expressa o resultado que a organização pretende alcançar, alinhado à Missão e à Visão.", "Inadequada. A decisão quantifica o resultado e define prazo, caracterizando uma Meta."], "tag": "Objetivo"}, {"title": "4. Escolher o caminho", "context": "A equipe aprovou o objetivo de aumentar a qualidade e a disponibilidade dos serviços digitais críticos. Agora precisa decidir como avançar para alcançá-lo.", "ask": "Qual decisão representa uma Estratégia coerente?", "opts": ["Modernizar a infraestrutura e fortalecer os mecanismos de continuidade e monitoramento dos serviços críticos.", "99,5% de disponibilidade mensal até dezembro.", "Percentual mensal de disponibilidade.", "Configurar a ferramenta de monitoramento na próxima semana."], "a": 0, "why": ["Adequada. A Estratégia define o caminho ou a abordagem para alcançar o Objetivo Estratégico.", "Inadequada. O valor esperado acompanhado de prazo corresponde a uma Meta.", "Inadequada. A medida utilizada para acompanhar desempenho é um Indicador.", "Inadequada. É uma atividade específica de execução, portanto uma Ação."], "tag": "Estratégia"}, {"title": "5. Tornar o resultado mensurável", "context": "A estratégia de modernização foi aprovada. Para acompanhar o compromisso da equipe, o resultado esperado precisa ser específico e verificável.", "ask": "Qual decisão deve ser adotada como Meta?", "opts": ["Melhorar continuamente os serviços digitais.", "Modernizar a infraestrutura tecnológica.", "Alcançar disponibilidade mensal mínima de 99,5% nos serviços digitais críticos até dezembro.", "Percentual mensal de disponibilidade dos serviços críticos."], "a": 2, "why": ["Inadequada. A formulação é ampla e não define medida nem prazo.", "Inadequada. A formulação indica um caminho de atuação, mas não quantifica o resultado esperado.", "Adequada. A Meta especifica o resultado, apresenta medida e estabelece um prazo para seu alcance.", "Inadequada. Essa formulação indica o que será medido e corresponde a um Indicador."], "tag": "Meta"}, {"title": "6. Levar a estratégia para a execução", "context": "A meta de 99,5% de disponibilidade até dezembro está aprovada. A equipe precisa definir uma iniciativa concreta que contribua para alcançá-la.", "ask": "Qual decisão deve ser incorporada ao plano de ação?", "opts": ["Ser referência nacional em serviços digitais.", "Implantar monitoramento contínuo dos sistemas críticos e revisar os procedimentos de continuidade.", "99,5% de disponibilidade até dezembro.", "Percentual mensal de disponibilidade dos serviços."], "a": 1, "why": ["Inadequada. A formulação descreve uma aspiração futura e se relaciona à Visão.", "Adequada. A decisão descreve atividades concretas que transformam a Estratégia em execução.", "Inadequada. A formulação representa a Meta já estabelecida.", "Inadequada. A formulação corresponde ao Indicador de desempenho."], "tag": "Ação"}, {"title": "7. Definir como o resultado será medido", "context": "A direção quer saber, mensalmente, se a meta de disponibilidade está sendo alcançada.", "ask": "Qual Indicador a equipe deve selecionar?", "opts": ["Número de profissionais da equipe de infraestrutura.", "Quantidade de reuniões de acompanhamento realizadas.", "Percentual mensal de disponibilidade dos serviços digitais críticos.", "Número de sistemas cadastrados no inventário."], "a": 2, "why": ["Inadequada. O tamanho da equipe não mede diretamente o resultado definido na Meta.", "Inadequada. Reuniões representam atividades de gestão, mas não medem a disponibilidade.", "Adequada. O indicador mede diretamente o resultado estabelecido na Meta e permite compará-lo com 99,5%.", "Inadequada. O inventário é relevante para a gestão, mas sua quantidade não demonstra a disponibilidade dos serviços."], "tag": "Indicador"}, {"title": "8. Avaliar uma nova prioridade", "context": "Usuários relatam demora na solução de incidentes. A equipe estabeleceu o objetivo de melhorar a eficiência do atendimento.", "ask": "Qual decisão é adequada para transformar esse objetivo em uma Meta?", "opts": ["Tempo médio de atendimento dos incidentes críticos.", "Reduzir o tempo médio de atendimento dos incidentes críticos para até 30 minutos até junho.", "Revisar o fluxo de atendimento dos incidentes.", "Melhorar a eficiência do atendimento."], "a": 1, "why": ["Inadequada. A formulação identifica uma medida e corresponde a um Indicador.", "Adequada. A decisão define um resultado específico, mensurável e temporal.", "Inadequada. Revisar o fluxo descreve uma Ação.", "Inadequada. A formulação permanece ampla e corresponde ao Objetivo, não à Meta."], "tag": "Meta"}, {"title": "9. Escolher a medida para a nova meta", "context": "A meta aprovada é reduzir o tempo médio de atendimento dos incidentes críticos para até 30 minutos até junho.", "ask": "Qual decisão de mensuração é mais coerente?", "opts": ["Medir o número de computadores da empresa.", "Medir a quantidade de reuniões da equipe.", "Medir o percentual do orçamento utilizado.", "Medir o tempo médio de atendimento dos incidentes críticos."], "a": 3, "why": ["Inadequada. O número de computadores não mede o tempo necessário para solucionar incidentes.", "Inadequada. A quantidade de reuniões não mede diretamente a eficiência do atendimento.", "Inadequada. O orçamento pode influenciar a operação, mas não mede o resultado estabelecido.", "Adequada. O tempo médio de atendimento mede diretamente a variável definida na Meta."], "tag": "Indicador"}, {"title": "10. Decidir uma ação para melhorar o atendimento", "context": "O indicador mostra que o tempo médio atual é de 52 minutos, acima da meta de 30 minutos. A equipe precisa agir.", "ask": "Qual decisão é mais adequada neste momento?", "opts": ["Alterar a Missão para incluir o prazo de 30 minutos.", "Substituir o Indicador por número de reuniões.", "Revisar o fluxo de atendimento, definir prioridades para incidentes críticos e implantar alertas automáticos.", "Transformar 52 minutos na nova Visão da organização."], "a": 2, "why": ["Inadequada. A Missão representa o propósito organizacional e não deve ser usada para registrar uma meta operacional.", "Inadequada. Trocar a medida por uma variável sem relação direta ocultaria o desempenho em vez de orientar a melhoria.", "Adequada. A decisão estabelece Ações concretas relacionadas à causa do resultado e à Meta pretendida.", "Inadequada. Uma medida operacional não constitui uma Visão de futuro."], "tag": "Ação"}, {"title": "11. Tratar a segurança como resultado estratégico", "context": "O diagnóstico identificou aumento de incidentes críticos de segurança. A equipe decidiu reduzir sua ocorrência.", "ask": "Qual combinação entre Meta e Indicador deve ser aprovada?", "opts": ["Meta: implantar uma ferramenta de segurança. Indicador: número de reuniões.", "Meta: melhorar a segurança. Indicador: capacitar os colaboradores.", "Meta: reduzir em 20% os incidentes críticos até dezembro. Indicador: número de incidentes críticos registrados no período.", "Meta: monitorar os sistemas. Indicador: criar procedimentos de resposta."], "a": 2, "why": ["Inadequada. Implantar ferramenta é uma Ação, e reuniões não medem diretamente a redução dos incidentes.", "Inadequada. “Melhorar a segurança” não especifica o resultado, e capacitar é uma Ação.", "Adequada. A Meta quantifica o resultado e define prazo; o Indicador fornece a medida para verificar sua evolução.", "Inadequada. As duas formulações representam atividades ou Ações, e não a relação entre Meta e Indicador."], "tag": "Meta + Indicador"}, {"title": "12. Verificar a coerência do plano", "context": "Antes de apresentar o planejamento à direção, a equipe precisa verificar se os elementos formam uma cadeia lógica.", "ask": "Qual conjunto apresenta o desdobramento mais coerente?", "opts": ["Objetivo: aumentar a disponibilidade; Estratégia: modernizar infraestrutura e continuidade; Meta: atingir 99,5% até dezembro; Ação: implantar monitoramento contínuo; Indicador: percentual mensal de disponibilidade.", "Objetivo: percentual de disponibilidade; Estratégia: 99,5%; Meta: modernizar infraestrutura; Ação: ser referência; Indicador: missão institucional.", "Objetivo: implantar ferramenta; Estratégia: número de incidentes; Meta: melhorar serviços; Ação: 99,5%; Indicador: visão futura.", "Objetivo: número de reuniões; Estratégia: medir disponibilidade; Meta: missão; Ação: indicador mensal; Indicador: modernizar infraestrutura."], "a": 0, "why": ["Adequada. Há coerência entre o resultado pretendido, o caminho escolhido, o resultado mensurável, a execução e a forma de medição.", "Inadequada. Os conceitos estão trocados e não há encadeamento entre Objetivo, Estratégia, Meta, Ação e Indicador.", "Inadequada. A alternativa mistura Ação, Indicador, Objetivo, Meta e Visão em funções incorretas.", "Inadequada. Os elementos não correspondem às respectivas funções no processo de planejamento."], "tag": "Coerência"}, {"title": "13. Interpretar o indicador", "context": "Após três meses, a disponibilidade mensal dos serviços críticos foi de 99,1%, enquanto a Meta permanece em 99,5%.", "ask": "Como a equipe de planejamento deve interpretar essa informação?", "opts": ["O resultado está abaixo da Meta; a equipe deve analisar os desvios e avaliar ajustes nas Ações e na execução da Estratégia.", "O resultado transforma automaticamente o Indicador em uma nova Missão.", "A Meta foi atingida porque qualquer valor acima de 99% é suficiente.", "O Indicador deve ser eliminado porque revelou desempenho inferior ao esperado."], "a": 0, "why": ["Adequada. O Indicador permite comparar o desempenho observado com a Meta, identificar desvios e apoiar decisões de ajuste.", "Inadequada. Missão e Indicador têm funções distintas no planejamento.", "Inadequada. A Meta aprovada é 99,5%; portanto, 99,1% está abaixo do resultado esperado.", "Inadequada. O fato de o Indicador revelar um desvio confirma sua utilidade para o controle e a avaliação."], "tag": "Controle"}, {"title": "14. Evitar indicadores sem relação com o objetivo", "context": "Para o objetivo de aumentar a disponibilidade dos serviços críticos, um integrante propôs usar somente “número de reuniões realizadas pela equipe” como indicador principal.", "ask": "Qual decisão você tomaria?", "opts": ["Aprovar, porque todo número é um indicador estratégico adequado.", "Rejeitar como indicador principal, pois reuniões medem atividade e não o resultado de disponibilidade; manter o percentual de disponibilidade como medida diretamente relacionada.", "Aprovar e eliminar a Meta de disponibilidade.", "Transformar o número de reuniões em Visão organizacional."], "a": 1, "why": ["Inadequada. Um indicador precisa ter relação com o resultado que se pretende acompanhar; não basta ser quantificável.", "Adequada. O indicador deve medir diretamente ou de forma relevante o resultado associado ao Objetivo e à Meta.", "Inadequada. Eliminar a Meta prejudicaria a referência usada para avaliar o desempenho.", "Inadequada. Visão representa futuro desejado, e não uma quantidade de atividades realizadas."], "tag": "Indicador"}, {"title": "15. Apresentar a decisão final à direção", "context": "A equipe concluiu o trabalho e precisa apresentar a lógica utilizada para transformar propósito em execução e acompanhamento.", "ask": "Qual sequência deve orientar a apresentação do planejamento?", "opts": ["Indicadores → Ações → Metas → Estratégias → Objetivos → Missão e Visão.", "Metas → Indicadores → Visão → Ações → Missão → Objetivos.", "Ações → Missão → Indicadores → Objetivos → Metas → Visão.", "Missão e Visão → Objetivos → Estratégias → Metas → Ações → Indicadores."], "a": 3, "why": ["Inadequada. A sequência começa pela mensuração e inverte a lógica do desdobramento estratégico.", "Inadequada. Os elementos aparecem sem respeitar suas funções no processo.", "Inadequada. A execução não antecede a definição do propósito e dos resultados estratégicos.", "Adequada. A sequência parte do propósito e do futuro desejado, define resultados e caminhos, quantifica-os, executa-os e mede o desempenho."], "tag": "Síntese"}];
+let current=0, correct=0, answered=false, history=[];
+const $=id=>document.getElementById(id);
+function render(){
+ const x=stages[current]; answered=false;
+ $("status").textContent=`Decisão ${current+1} de ${stages.length}`;
+ $("points").textContent=`Decisões adequadas: ${correct}`;
+ $("pbar").style.width=`${(current/stages.length)*100}%`;
+ $("tag").textContent=x.tag; $("step").textContent=`Etapa ${current+1}`;
+ $("title").textContent=x.title; $("context").textContent=x.context;
+ $("ask").innerHTML=`<b>${x.ask}</b>`;
+ $("options").innerHTML=x.opts.map((o,i)=>`<label class="option"><input type="radio" name="choice" value="${i}"> <b>${String.fromCharCode(65+i)}.</b> ${o}</label>`).join("");
+ $("feedback").className="feedback"; $("feedback").innerHTML="";
+ $("decide").disabled=false; $("next").disabled=true;
+}
+$("form").addEventListener("submit",e=>{
+ e.preventDefault(); if(answered)return;
+ const sel=document.querySelector('input[name="choice"]:checked');
+ if(!sel){$("feedback").className="feedback wrong";$("feedback").innerHTML="<b>Selecione uma decisão antes de continuar.</b>";return;}
+ const x=stages[current], v=Number(sel.value), ok=v===x.a; answered=true;
+ if(ok)correct++;
+ history.push({n:current+1,title:x.title,choice:x.opts[v],ok,why:x.why[v]});
+ $("feedback").className=`feedback ${ok?"good":"wrong"}`;
+ $("feedback").innerHTML=`<b>${ok?"Decisão adequada.":"Decisão inadequada."}</b><br>${x.why[v]}${ok?"":`<br><br><b>Decisão recomendada:</b> ${x.opts[x.a]}<br><b>Por quê:</b> ${x.why[x.a].replace(/^Adequada\.\s*/,"")}`}`;
+ document.querySelectorAll('input[name="choice"]').forEach(i=>i.disabled=true);
+ $("decide").disabled=true; $("next").disabled=false;
+ $("points").textContent=`Decisões adequadas: ${correct}`;
+ $("pbar").style.width=`${((current+1)/stages.length)*100}%`;
+});
+$("next").addEventListener("click",()=>{
+ if(!answered)return;
+ if(current<stages.length-1){current++;render();window.scrollTo({top:$("decision").offsetTop-10,behavior:"smooth"});}
+ else finish();
+});
+function finish(){
+ $("decision").style.display="none"; $("result").classList.add("show");
+ const pct=Math.round(correct/stages.length*100);
+ $("score").textContent=`${correct} de ${stages.length} decisões adequadas — ${pct}%`;
+ $("message").textContent=pct>=80?"Você demonstrou boa compreensão do encadeamento das decisões no processo de planejamento.":pct>=60?"Você compreendeu boa parte do processo. Revise as decisões inadequadas e observe a função de cada elemento.":"Revise o encadeamento entre Missão e Visão, Objetivos, Estratégias, Metas, Ações e Indicadores e refaça a simulação.";
+ $("log").innerHTML=history.map(h=>`<div class="log-item"><b>${h.n}. ${h.title}</b><br><span class="${h.ok?"oktxt":"badtxt"}">${h.ok?"Adequada":"Inadequada"}</span> — ${h.choice}<br><span>${h.why}</span></div>`).join("");
+ $("result").scrollIntoView({behavior:"smooth"});
+}
+$("restart").addEventListener("click",()=>{
+ current=0;correct=0;answered=false;history=[];$("result").classList.remove("show");$("decision").style.display="block";render();window.scrollTo({top:0,behavior:"smooth"});
+});
+render();
+</script>
+</body></html>
